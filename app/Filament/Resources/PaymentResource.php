@@ -48,11 +48,51 @@ class PaymentResource extends Resource
                 Tables\Columns\TextColumn::make('id')->sortable(),
                 Tables\Columns\TextColumn::make('payment_no')->searchable(),
                 Tables\Columns\TextColumn::make('date')->date('Y-m-d')->sortable(),
-                Tables\Columns\TextColumn::make('order_no'),
+                Tables\Columns\TextColumn::make('order_no')->searchable(),
+                Tables\Columns\TextColumn::make('outlet')->numeric(),
                 Tables\Columns\TextColumn::make('amount')->money('BDT')->sortable(),
                 Tables\Columns\TextColumn::make('type')->numeric(),
+                Tables\Columns\TextColumn::make('balance_tran_no')->limit(30),
+                Tables\Columns\TextColumn::make('created_at')->dateTime()->sortable()->toggleable(isToggledHiddenByDefault: true),
+            ])
+            ->filters([
+                Tables\Filters\Filter::make('payment_no')
+                    ->form([
+                        Forms\Components\TextInput::make('payment_no')->label('Payment No'),
+                    ])
+                    ->query(function ($query, array $data) {
+                        return $query
+                            ->when($data['payment_no'], fn ($query) => $query->where('payment_no', 'like', '%' . $data['payment_no'] . '%'));
+                    }),
+                Tables\Filters\Filter::make('order_no')
+                    ->form([
+                        Forms\Components\TextInput::make('order_no')->label('Order No'),
+                    ])
+                    ->query(function ($query, array $data) {
+                        return $query
+                            ->when($data['order_no'], fn ($query) => $query->where('order_no', 'like', '%' . $data['order_no'] . '%'));
+                    }),
+                Tables\Filters\Filter::make('outlet')
+                    ->form([
+                        Forms\Components\TextInput::make('outlet')->label('Outlet'),
+                    ])
+                    ->query(function ($query, array $data) {
+                        return $query
+                            ->when($data['outlet'], fn ($query) => $query->where('outlet', 'like', '%' . $data['outlet'] . '%'));
+                    }),
+                Tables\Filters\Filter::make('date')
+                    ->form([
+                        Forms\Components\DatePicker::make('date_from'),
+                        Forms\Components\DatePicker::make('date_until'),
+                    ])
+                    ->query(function ($query, array $data) {
+                        return $query
+                            ->when($data['date_from'], fn ($query) => $query->whereDate('date', '>=', $data['date_from']))
+                            ->when($data['date_until'], fn ($query) => $query->whereDate('date', '<=', $data['date_until']));
+                    }),
             ])
             ->actions([
+                Tables\Actions\ViewAction::make(),
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\DeleteAction::make(),
             ])

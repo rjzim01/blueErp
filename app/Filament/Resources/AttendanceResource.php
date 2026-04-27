@@ -41,13 +41,44 @@ class AttendanceResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('id')->sortable(),
-                Tables\Columns\TextColumn::make('emp_id')->numeric(),
-                Tables\Columns\TextColumn::make('bioid'),
+                Tables\Columns\TextColumn::make('emp_id')->numeric()->toggleable(),
+                Tables\Columns\TextColumn::make('bioid')->searchable()->toggleable(),
                 Tables\Columns\TextColumn::make('date')->date('Y-m-d')->sortable(),
-                Tables\Columns\TextColumn::make('type')->numeric(),
-                Tables\Columns\TextColumn::make('pinged_at')->dateTime(),
+                Tables\Columns\TextColumn::make('type')->numeric()->toggleable(),
+                Tables\Columns\TextColumn::make('ip')->limit(30)->toggleable(),
+                Tables\Columns\TextColumn::make('medium')->toggleable(),
+                Tables\Columns\TextColumn::make('pinged_at')->dateTime()->sortable()->toggleable(isToggledHiddenByDefault: true),
+            ])
+            ->filters([
+                Tables\Filters\Filter::make('bioid')
+                    ->form([
+                        Forms\Components\TextInput::make('bioid')->label('Bio ID'),
+                    ])
+                    ->query(function ($query, array $data) {
+                        return $query
+                            ->when($data['bioid'], fn ($query) => $query->where('bioid', 'like', '%' . $data['bioid'] . '%'));
+                    }),
+                Tables\Filters\Filter::make('emp_id')
+                    ->form([
+                        Forms\Components\TextInput::make('emp_id')->label('Employee ID'),
+                    ])
+                    ->query(function ($query, array $data) {
+                        return $query
+                            ->when($data['emp_id'], fn ($query) => $query->where('emp_id', 'like', '%' . $data['emp_id'] . '%'));
+                    }),
+                Tables\Filters\Filter::make('date')
+                    ->form([
+                        Forms\Components\DatePicker::make('date_from'),
+                        Forms\Components\DatePicker::make('date_until'),
+                    ])
+                    ->query(function ($query, array $data) {
+                        return $query
+                            ->when($data['date_from'], fn ($query) => $query->whereDate('date', '>=', $data['date_from']))
+                            ->when($data['date_until'], fn ($query) => $query->whereDate('date', '<=', $data['date_until']));
+                    }),
             ])
             ->actions([
+                Tables\Actions\ViewAction::make(),
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\DeleteAction::make(),
             ])

@@ -40,11 +40,43 @@ class StockEntryResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('id')->sortable(),
-                Tables\Columns\TextColumn::make('fy')->numeric(),
+                Tables\Columns\TextColumn::make('fy')->numeric()->toggleable(),
                 Tables\Columns\TextColumn::make('statement')->searchable(),
                 Tables\Columns\TextColumn::make('total')->money('BDT')->sortable(),
+                Tables\Columns\TextColumn::make('items')->limit(50)->toggleable(isToggledHiddenByDefault: true),
+                Tables\Columns\TextColumn::make('entry_by')->toggleable(),
+                Tables\Columns\TextColumn::make('created_at')->dateTime()->sortable()->toggleable(isToggledHiddenByDefault: true),
+            ])
+            ->filters([
+                Tables\Filters\Filter::make('statement')
+                    ->form([
+                        Forms\Components\TextInput::make('statement')->label('Statement'),
+                    ])
+                    ->query(function ($query, array $data) {
+                        return $query
+                            ->when($data['statement'], fn ($query) => $query->where('statement', 'like', '%' . $data['statement'] . '%'));
+                    }),
+                Tables\Filters\Filter::make('fy')
+                    ->form([
+                        Forms\Components\TextInput::make('fy')->label('FY'),
+                    ])
+                    ->query(function ($query, array $data) {
+                        return $query
+                            ->when($data['fy'], fn ($query) => $query->where('fy', 'like', '%' . $data['fy'] . '%'));
+                    }),
+                Tables\Filters\Filter::make('created_at')
+                    ->form([
+                        Forms\Components\DatePicker::make('created_from'),
+                        Forms\Components\DatePicker::make('created_until'),
+                    ])
+                    ->query(function ($query, array $data) {
+                        return $query
+                            ->when($data['created_from'], fn ($query) => $query->whereDate('created_at', '>=', $data['created_from']))
+                            ->when($data['created_until'], fn ($query) => $query->whereDate('created_at', '<=', $data['created_until']));
+                    }),
             ])
             ->actions([
+                Tables\Actions\ViewAction::make(),
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\DeleteAction::make(),
             ])

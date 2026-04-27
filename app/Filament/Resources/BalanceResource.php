@@ -40,12 +40,41 @@ class BalanceResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('id')->sortable(),
-                Tables\Columns\TextColumn::make('outlet')->numeric(),
+                Tables\Columns\TextColumn::make('outlet')->numeric()->searchable(),
                 Tables\Columns\TextColumn::make('amount')->money('BDT')->sortable(),
-                Tables\Columns\TextColumn::make('method_name'),
+                Tables\Columns\TextColumn::make('method_name')->searchable(),
                 Tables\Columns\TextColumn::make('created_at')->dateTime()->sortable()->toggleable(isToggledHiddenByDefault: true),
             ])
+            ->filters([
+                Tables\Filters\Filter::make('outlet')
+                    ->form([
+                        Forms\Components\TextInput::make('outlet')->label('Outlet'),
+                    ])
+                    ->query(function ($query, array $data) {
+                        return $query
+                            ->when($data['outlet'], fn ($query) => $query->where('outlet', 'like', '%' . $data['outlet'] . '%'));
+                    }),
+                Tables\Filters\Filter::make('method_name')
+                    ->form([
+                        Forms\Components\TextInput::make('method_name')->label('Method Name'),
+                    ])
+                    ->query(function ($query, array $data) {
+                        return $query
+                            ->when($data['method_name'], fn ($query) => $query->where('method_name', 'like', '%' . $data['method_name'] . '%'));
+                    }),
+                Tables\Filters\Filter::make('created_at')
+                    ->form([
+                        Forms\Components\DatePicker::make('created_from'),
+                        Forms\Components\DatePicker::make('created_until'),
+                    ])
+                    ->query(function ($query, array $data) {
+                        return $query
+                            ->when($data['created_from'], fn ($query) => $query->whereDate('created_at', '>=', $data['created_from']))
+                            ->when($data['created_until'], fn ($query) => $query->whereDate('created_at', '<=', $data['created_until']));
+                    }),
+            ])
             ->actions([
+                Tables\Actions\ViewAction::make(),
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\DeleteAction::make(),
             ])

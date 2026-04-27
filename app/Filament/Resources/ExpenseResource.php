@@ -45,13 +45,51 @@ class ExpenseResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('id')->sortable(),
-                Tables\Columns\TextColumn::make('expense_sector')->numeric(),
-                Tables\Columns\TextColumn::make('outlet')->numeric(),
+                Tables\Columns\TextColumn::make('expense_sector')->numeric()->toggleable(),
+                Tables\Columns\TextColumn::make('outlet')->numeric()->toggleable(),
                 Tables\Columns\TextColumn::make('amount')->money('BDT')->sortable(),
                 Tables\Columns\TextColumn::make('status'),
-                Tables\Columns\TextColumn::make('receipt_no'),
+                Tables\Columns\TextColumn::make('receipt_no')->searchable(),
+                Tables\Columns\TextColumn::make('remarks')->limit(50)->toggleable(isToggledHiddenByDefault: true),
+                Tables\Columns\TextColumn::make('created_at')->dateTime()->sortable()->toggleable(isToggledHiddenByDefault: true),
+            ])
+            ->filters([
+                Tables\Filters\SelectFilter::make('status')
+                    ->options([
+                        'pending' => 'Pending',
+                        'approved' => 'Approved',
+                        'rejected' => 'Rejected',
+                    ])
+                    ->label('Status'),
+Tables\Filters\Filter::make('expense_sector')
+                    ->form([
+                        Forms\Components\TextInput::make('expense_sector')->label('Expense sector'),
+                    ])
+                    ->query(function ($query, array $data) {
+                        return $query
+                            ->when($data['expense_sector'], fn ($query) => $query->where('expense_sector', 'like', '%' . $data['expense_sector'] . '%'));
+                    }),
+                Tables\Filters\Filter::make('outlet')
+                    ->form([
+                        Forms\Components\TextInput::make('outlet')->label('Outlet'),
+                    ])
+                    ->query(function ($query, array $data) {
+                        return $query
+                            ->when($data['outlet'], fn ($query) => $query->where('outlet', 'like', '%' . $data['outlet'] . '%'));
+                    }),
+                Tables\Filters\Filter::make('created_at')
+                    ->form([
+                        Forms\Components\DatePicker::make('created_from'),
+                        Forms\Components\DatePicker::make('created_until'),
+                    ])
+                    ->query(function ($query, array $data) {
+                        return $query
+                            ->when($data['created_from'], fn ($query) => $query->whereDate('created_at', '>=', $data['created_from']))
+                            ->when($data['created_until'], fn ($query) => $query->whereDate('created_at', '<=', $data['created_until']));
+                    }),
             ])
             ->actions([
+                Tables\Actions\ViewAction::make(),
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\DeleteAction::make(),
             ])

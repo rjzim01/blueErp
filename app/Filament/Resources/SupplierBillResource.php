@@ -41,11 +41,40 @@ class SupplierBillResource extends Resource
             ->columns([
                 Tables\Columns\TextColumn::make('id')->sortable(),
                 Tables\Columns\TextColumn::make('bill_no')->searchable(),
-                Tables\Columns\TextColumn::make('supplier')->numeric(),
+                Tables\Columns\TextColumn::make('supplier')->numeric()->toggleable(),
                 Tables\Columns\TextColumn::make('amount')->money('BDT')->sortable(),
-                Tables\Columns\TextColumn::make('created_at')->dateTime(),
+                Tables\Columns\TextColumn::make('created_at')->dateTime()->sortable()->toggleable(isToggledHiddenByDefault: true),
+            ])
+            ->filters([
+                Tables\Filters\Filter::make('bill_no')
+                    ->form([
+                        Forms\Components\TextInput::make('bill_no')->label('Bill No'),
+                    ])
+                    ->query(function ($query, array $data) {
+                        return $query
+                            ->when($data['bill_no'], fn ($query) => $query->where('bill_no', 'like', '%' . $data['bill_no'] . '%'));
+                    }),
+                Tables\Filters\Filter::make('supplier')
+                    ->form([
+                        Forms\Components\TextInput::make('supplier')->label('Supplier'),
+                    ])
+                    ->query(function ($query, array $data) {
+                        return $query
+                            ->when($data['supplier'], fn ($query) => $query->where('supplier', 'like', '%' . $data['supplier'] . '%'));
+                    }),
+                Tables\Filters\Filter::make('created_at')
+                    ->form([
+                        Forms\Components\DatePicker::make('created_from'),
+                        Forms\Components\DatePicker::make('created_until'),
+                    ])
+                    ->query(function ($query, array $data) {
+                        return $query
+                            ->when($data['created_from'], fn ($query) => $query->whereDate('created_at', '>=', $data['created_from']))
+                            ->when($data['created_until'], fn ($query) => $query->whereDate('created_at', '<=', $data['created_until']));
+                    }),
             ])
             ->actions([
+                Tables\Actions\ViewAction::make(),
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\DeleteAction::make(),
             ])

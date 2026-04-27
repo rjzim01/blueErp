@@ -51,12 +51,73 @@ class StockTransferResource extends Resource
             ->columns([
                 Tables\Columns\TextColumn::make('id')->sortable(),
                 Tables\Columns\TextColumn::make('transfer_code')->searchable(),
-                Tables\Columns\TextColumn::make('from_name'),
-                Tables\Columns\TextColumn::make('to_name'),
-                Tables\Columns\TextColumn::make('status'),
-                Tables\Columns\TextColumn::make('initiated_name'),
+                Tables\Columns\TextColumn::make('fy')->numeric()->toggleable(),
+                Tables\Columns\TextColumn::make('from_name')->toggleable(),
+                Tables\Columns\TextColumn::make('to_name')->toggleable(),
+                Tables\Columns\TextColumn::make('status')
+                    ->formatStateUsing(fn ($state) => match ($state) {
+                        '0' => 'Pending',
+                        '1' => 'Confirmed',
+                        '2' => 'Rejected',
+                        default => $state,
+                    })
+                    ->badge()
+                    ->color(fn ($state) => match ($state) {
+                        '0' => 'warning',
+                        '1' => 'success',
+                        '2' => 'danger',
+                        default => 'gray',
+                    }),
+                Tables\Columns\TextColumn::make('initiated_name')->toggleable(),
+                Tables\Columns\TextColumn::make('confirmed_name')->toggleable(isToggledHiddenByDefault: true),
+                Tables\Columns\TextColumn::make('items')->limit(50)->toggleable(isToggledHiddenByDefault: true),
+                Tables\Columns\TextColumn::make('created_at')->dateTime()->sortable()->toggleable(isToggledHiddenByDefault: true),
+            ])
+            ->filters([
+                Tables\Filters\SelectFilter::make('status')
+                    ->options([
+                        '0' => 'Pending',
+                        '1' => 'Confirmed',
+                        '2' => 'Rejected',
+                    ])
+                    ->label('Status'),
+                Tables\Filters\Filter::make('transfer_code')
+                    ->form([
+                        Forms\Components\TextInput::make('transfer_code')->label('Transfer Code'),
+                    ])
+                    ->query(function ($query, array $data) {
+                        return $query
+                            ->when($data['transfer_code'], fn ($query) => $query->where('transfer_code', 'like', '%' . $data['transfer_code'] . '%'));
+                    }),
+                Tables\Filters\Filter::make('from_name')
+                    ->form([
+                        Forms\Components\TextInput::make('from_name')->label('From'),
+                    ])
+                    ->query(function ($query, array $data) {
+                        return $query
+                            ->when($data['from_name'], fn ($query) => $query->where('from_name', 'like', '%' . $data['from_name'] . '%'));
+                    }),
+                Tables\Filters\Filter::make('to_name')
+                    ->form([
+                        Forms\Components\TextInput::make('to_name')->label('To'),
+                    ])
+                    ->query(function ($query, array $data) {
+                        return $query
+                            ->when($data['to_name'], fn ($query) => $query->where('to_name', 'like', '%' . $data['to_name'] . '%'));
+                    }),
+                Tables\Filters\Filter::make('created_at')
+                    ->form([
+                        Forms\Components\DatePicker::make('created_from'),
+                        Forms\Components\DatePicker::make('created_until'),
+                    ])
+                    ->query(function ($query, array $data) {
+                        return $query
+                            ->when($data['created_from'], fn ($query) => $query->whereDate('created_at', '>=', $data['created_from']))
+                            ->when($data['created_until'], fn ($query) => $query->whereDate('created_at', '<=', $data['created_until']));
+                    }),
             ])
             ->actions([
+                Tables\Actions\ViewAction::make(),
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\DeleteAction::make(),
             ])

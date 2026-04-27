@@ -44,18 +44,50 @@ class OutletResource extends Resource
             ->columns([
                 Tables\Columns\TextColumn::make('id')->sortable(),
                 Tables\Columns\TextColumn::make('name')->searchable(),
-                Tables\Columns\TextColumn::make('mobile'),
-                Tables\Columns\TextColumn::make('pathao_store_id')->numeric(),
-                Tables\Columns\TextColumn::make('description'),
+                Tables\Columns\TextColumn::make('mobile')->toggleable(),
+                Tables\Columns\TextColumn::make('pathao_store_id')->numeric()->toggleable(),
+                Tables\Columns\TextColumn::make('description')->limit(50)->toggleable(),
+                Tables\Columns\TextColumn::make('description2')->limit(50)->toggleable(isToggledHiddenByDefault: true),
+                Tables\Columns\TextColumn::make('outlet_manager')->numeric()->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('active')
                     ->label('Status')
                     ->formatStateUsing(fn ($state) => $state === 'yes' ? 'Active' : 'Inactive')
                     ->color(fn ($state) => $state === 'yes' ? 'success' : 'danger'),
+                Tables\Columns\TextColumn::make('created_at')->dateTime()->sortable()->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                Tables\Filters\SelectFilter::make('active')->options(['yes' => 'Active', 'no' => 'Inactive']),
+                Tables\Filters\SelectFilter::make('active')
+                    ->options(['yes' => 'Active', 'no' => 'Inactive'])
+                    ->label('Status'),
+                Tables\Filters\Filter::make('name')
+                    ->form([
+                        Forms\Components\TextInput::make('name')->label('Name'),
+                    ])
+                    ->query(function ($query, array $data) {
+                        return $query
+                            ->when($data['name'], fn ($query) => $query->where('name', 'like', '%' . $data['name'] . '%'));
+                    }),
+                Tables\Filters\Filter::make('mobile')
+                    ->form([
+                        Forms\Components\TextInput::make('mobile')->label('Mobile'),
+                    ])
+                    ->query(function ($query, array $data) {
+                        return $query
+                            ->when($data['mobile'], fn ($query) => $query->where('mobile', 'like', '%' . $data['mobile'] . '%'));
+                    }),
+                Tables\Filters\Filter::make('created_at')
+                    ->form([
+                        Forms\Components\DatePicker::make('created_from'),
+                        Forms\Components\DatePicker::make('created_until'),
+                    ])
+                    ->query(function ($query, array $data) {
+                        return $query
+                            ->when($data['created_from'], fn ($query) => $query->whereDate('created_at', '>=', $data['created_from']))
+                            ->when($data['created_until'], fn ($query) => $query->whereDate('created_at', '<=', $data['created_until']));
+                    }),
             ])
             ->actions([
+                Tables\Actions\ViewAction::make(),
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\DeleteAction::make(),
             ])

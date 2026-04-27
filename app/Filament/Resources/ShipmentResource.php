@@ -51,12 +51,59 @@ class ShipmentResource extends Resource
                 Tables\Columns\TextColumn::make('id')->sortable(),
                 Tables\Columns\TextColumn::make('tracking_no')->searchable(),
                 Tables\Columns\TextColumn::make('order_no')->searchable(),
-                Tables\Columns\TextColumn::make('mobile'),
-                Tables\Columns\TextColumn::make('channel_name'),
-                Tables\Columns\TextColumn::make('status'),
-                Tables\Columns\TextColumn::make('delivery_boy_name'),
+                Tables\Columns\TextColumn::make('mobile')->toggleable(),
+                Tables\Columns\TextColumn::make('channel_name')->toggleable(),
+                Tables\Columns\TextColumn::make('packet_no')->toggleable(),
+                Tables\Columns\TextColumn::make('status')->toggleable(),
+                Tables\Columns\TextColumn::make('delivery_boy_name')->toggleable(),
+                Tables\Columns\TextColumn::make('created_at')->dateTime()->sortable()->toggleable(isToggledHiddenByDefault: true),
+            ])
+            ->filters([
+                Tables\Filters\Filter::make('tracking_no')
+                    ->form([
+                        Forms\Components\TextInput::make('tracking_no')->label('Tracking No'),
+                    ])
+                    ->query(function ($query, array $data) {
+                        return $query
+                            ->when($data['tracking_no'], fn ($query) => $query->where('tracking_no', 'like', '%' . $data['tracking_no'] . '%'));
+                    }),
+                Tables\Filters\Filter::make('order_no')
+                    ->form([
+                        Forms\Components\TextInput::make('order_no')->label('Order No'),
+                    ])
+                    ->query(function ($query, array $data) {
+                        return $query
+                            ->when($data['order_no'], fn ($query) => $query->where('order_no', 'like', '%' . $data['order_no'] . '%'));
+                    }),
+                Tables\Filters\Filter::make('mobile')
+                    ->form([
+                        Forms\Components\TextInput::make('mobile')->label('Mobile'),
+                    ])
+                    ->query(function ($query, array $data) {
+                        return $query
+                            ->when($data['mobile'], fn ($query) => $query->where('mobile', 'like', '%' . $data['mobile'] . '%'));
+                    }),
+                Tables\Filters\Filter::make('channel_name')
+                    ->form([
+                        Forms\Components\TextInput::make('channel_name')->label('Channel'),
+                    ])
+                    ->query(function ($query, array $data) {
+                        return $query
+                            ->when($data['channel_name'], fn ($query) => $query->where('channel_name', 'like', '%' . $data['channel_name'] . '%'));
+                    }),
+                Tables\Filters\Filter::make('created_at')
+                    ->form([
+                        Forms\Components\DatePicker::make('created_from'),
+                        Forms\Components\DatePicker::make('created_until'),
+                    ])
+                    ->query(function ($query, array $data) {
+                        return $query
+                            ->when($data['created_from'], fn ($query) => $query->whereDate('created_at', '>=', $data['created_from']))
+                            ->when($data['created_until'], fn ($query) => $query->whereDate('created_at', '<=', $data['created_until']));
+                    }),
             ])
             ->actions([
+                Tables\Actions\ViewAction::make(),
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\DeleteAction::make(),
             ])

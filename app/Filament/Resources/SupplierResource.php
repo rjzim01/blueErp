@@ -42,12 +42,50 @@ class SupplierResource extends Resource
             ->columns([
                 Tables\Columns\TextColumn::make('id')->sortable(),
                 Tables\Columns\TextColumn::make('name')->searchable(),
-                Tables\Columns\TextColumn::make('supplier_code')->searchable(),
-                Tables\Columns\TextColumn::make('mobile'),
+                Tables\Columns\TextColumn::make('supplier_code')->searchable()->toggleable(),
+                Tables\Columns\TextColumn::make('mobile')->toggleable(),
+                Tables\Columns\TextColumn::make('address')->limit(50)->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('dues')->money('BDT')->sortable(),
                 Tables\Columns\TextColumn::make('created_at')->dateTime()->sortable()->toggleable(isToggledHiddenByDefault: true),
             ])
+            ->filters([
+                Tables\Filters\Filter::make('name')
+                    ->form([
+                        Forms\Components\TextInput::make('name')->label('Name'),
+                    ])
+                    ->query(function ($query, array $data) {
+                        return $query
+                            ->when($data['name'], fn ($query) => $query->where('name', 'like', '%' . $data['name'] . '%'));
+                    }),
+                Tables\Filters\Filter::make('supplier_code')
+                    ->form([
+                        Forms\Components\TextInput::make('supplier_code')->label('Supplier Code'),
+                    ])
+                    ->query(function ($query, array $data) {
+                        return $query
+                            ->when($data['supplier_code'], fn ($query) => $query->where('supplier_code', 'like', '%' . $data['supplier_code'] . '%'));
+                    }),
+                Tables\Filters\Filter::make('mobile')
+                    ->form([
+                        Forms\Components\TextInput::make('mobile')->label('Mobile'),
+                    ])
+                    ->query(function ($query, array $data) {
+                        return $query
+                            ->when($data['mobile'], fn ($query) => $query->where('mobile', 'like', '%' . $data['mobile'] . '%'));
+                    }),
+                Tables\Filters\Filter::make('created_at')
+                    ->form([
+                        Forms\Components\DatePicker::make('created_from'),
+                        Forms\Components\DatePicker::make('created_until'),
+                    ])
+                    ->query(function ($query, array $data) {
+                        return $query
+                            ->when($data['created_from'], fn ($query) => $query->whereDate('created_at', '>=', $data['created_from']))
+                            ->when($data['created_until'], fn ($query) => $query->whereDate('created_at', '<=', $data['created_until']));
+                    }),
+            ])
             ->actions([
+                Tables\Actions\ViewAction::make(),
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\DeleteAction::make(),
             ])

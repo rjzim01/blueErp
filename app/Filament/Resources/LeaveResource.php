@@ -43,12 +43,60 @@ class LeaveResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('id')->sortable(),
-                Tables\Columns\TextColumn::make('emp_id')->numeric(),
-                Tables\Columns\TextColumn::make('title'),
-                Tables\Columns\TextColumn::make('days')->numeric(),
-                Tables\Columns\TextColumn::make('status'),
+                Tables\Columns\TextColumn::make('emp_id')->numeric()->toggleable(),
+                Tables\Columns\TextColumn::make('outlet')->numeric()->toggleable(),
+                Tables\Columns\TextColumn::make('title')->searchable(),
+                Tables\Columns\TextColumn::make('description')->limit(50)->toggleable(isToggledHiddenByDefault: true),
+                Tables\Columns\TextColumn::make('days')->numeric()->sortable(),
+                Tables\Columns\TextColumn::make('status')
+                    ->formatStateUsing(fn ($state) => ucfirst($state))
+                    ->badge()
+                    ->color(fn ($state) => match ($state) {
+                        'pending' => 'warning',
+                        'approved' => 'success',
+                        'rejected' => 'danger',
+                        default => 'gray',
+                    }),
+                Tables\Columns\TextColumn::make('yearmonth')->toggleable(),
+                Tables\Columns\TextColumn::make('created_at')->dateTime()->sortable()->toggleable(isToggledHiddenByDefault: true),
+            ])
+            ->filters([
+                Tables\Filters\SelectFilter::make('status')
+                    ->options([
+                        'pending' => 'Pending',
+                        'approved' => 'Approved',
+                        'rejected' => 'Rejected',
+                    ])
+                    ->label('Status'),
+                Tables\Filters\Filter::make('emp_id')
+                    ->form([
+                        Forms\Components\TextInput::make('emp_id')->label('Employee ID'),
+                    ])
+                    ->query(function ($query, array $data) {
+                        return $query
+                            ->when($data['emp_id'], fn ($query) => $query->where('emp_id', 'like', '%' . $data['emp_id'] . '%'));
+                    }),
+                Tables\Filters\Filter::make('title')
+                    ->form([
+                        Forms\Components\TextInput::make('title')->label('Title'),
+                    ])
+                    ->query(function ($query, array $data) {
+                        return $query
+                            ->when($data['title'], fn ($query) => $query->where('title', 'like', '%' . $data['title'] . '%'));
+                    }),
+                Tables\Filters\Filter::make('created_at')
+                    ->form([
+                        Forms\Components\DatePicker::make('created_from'),
+                        Forms\Components\DatePicker::make('created_until'),
+                    ])
+                    ->query(function ($query, array $data) {
+                        return $query
+                            ->when($data['created_from'], fn ($query) => $query->whereDate('created_at', '>=', $data['created_from']))
+                            ->when($data['created_until'], fn ($query) => $query->whereDate('created_at', '<=', $data['created_until']));
+                    }),
             ])
             ->actions([
+                Tables\Actions\ViewAction::make(),
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\DeleteAction::make(),
             ])

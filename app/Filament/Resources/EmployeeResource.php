@@ -48,13 +48,52 @@ class EmployeeResource extends Resource
             ->columns([
                 Tables\Columns\TextColumn::make('id')->sortable(),
                 Tables\Columns\TextColumn::make('name')->searchable(),
-                Tables\Columns\TextColumn::make('designation'),
-                Tables\Columns\TextColumn::make('type'),
+                Tables\Columns\TextColumn::make('designation')->toggleable(),
+                Tables\Columns\TextColumn::make('type')->toggleable(),
                 Tables\Columns\TextColumn::make('salary')->money('BDT')->sortable(),
-                Tables\Columns\TextColumn::make('vacations')->sortable(),
-                Tables\Columns\TextColumn::make('outlet')->numeric(),
+                Tables\Columns\TextColumn::make('vacations')->sortable()->toggleable(),
+                Tables\Columns\TextColumn::make('vacation_remains')->sortable()->toggleable(isToggledHiddenByDefault: true),
+                Tables\Columns\TextColumn::make('outlet')->numeric()->toggleable(),
+                Tables\Columns\TextColumn::make('created_at')->dateTime()->sortable()->toggleable(isToggledHiddenByDefault: true),
+            ])
+            ->filters([
+                Tables\Filters\Filter::make('name')
+                    ->form([
+                        Forms\Components\TextInput::make('name')->label('Name'),
+                    ])
+                    ->query(function ($query, array $data) {
+                        return $query
+                            ->when($data['name'], fn ($query) => $query->where('name', 'like', '%' . $data['name'] . '%'));
+                    }),
+                Tables\Filters\Filter::make('designation')
+                    ->form([
+                        Forms\Components\TextInput::make('designation')->label('Designation'),
+                    ])
+                    ->query(function ($query, array $data) {
+                        return $query
+                            ->when($data['designation'], fn ($query) => $query->where('designation', 'like', '%' . $data['designation'] . '%'));
+                    }),
+                Tables\Filters\Filter::make('outlet')
+                    ->form([
+                        Forms\Components\TextInput::make('outlet')->label('Outlet'),
+                    ])
+                    ->query(function ($query, array $data) {
+                        return $query
+                            ->when($data['outlet'], fn ($query) => $query->where('outlet', 'like', '%' . $data['outlet'] . '%'));
+                    }),
+                Tables\Filters\Filter::make('created_at')
+                    ->form([
+                        Forms\Components\DatePicker::make('created_from'),
+                        Forms\Components\DatePicker::make('created_until'),
+                    ])
+                    ->query(function ($query, array $data) {
+                        return $query
+                            ->when($data['created_from'], fn ($query) => $query->whereDate('created_at', '>=', $data['created_from']))
+                            ->when($data['created_until'], fn ($query) => $query->whereDate('created_at', '<=', $data['created_until']));
+                    }),
             ])
             ->actions([
+                Tables\Actions\ViewAction::make(),
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\DeleteAction::make(),
             ])

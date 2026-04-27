@@ -1,0 +1,26 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+@config '../../../../tailwind.config.js';
+
+@layer base {
+    :root {
+        --sidebar-width: 16rem;
+    }
+}
+
+fi-sidebar {
+    --sidebar-background-color: rgb(255 255 255);
+    --sidebar-logo-area-background-color: rgb(255 255 255);
+}
+
+.dark fi-sidebar {
+    --sidebar-background-color: rgb(3 7 18);
+    --sidebar-logo-area-background-color: rgb(3 7 18);
+}
+
+fi-layout {
+    --sidebar-width: 16rem;
+    --sidebar-collapsed-width: 6rem;
+    --sidebar-width-mobile: 16rem;
+}

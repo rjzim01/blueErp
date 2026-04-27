@@ -1,0 +1,195 @@
+# blueERP V3 Revamp Plan
+# Generated: April 2026
+
+## WHAT IS blueERP?
+
+blueERP is an ERP (Enterprise Resource Planning) system for a business that includes:
+- **Customers** - Customer management
+- **Products** - Product catalog with colors, sizes, packaging
+- **Stock** - Inventory management
+- **Orders** - Order processing
+- **POS** - Point of Sale system
+- **Employees** - Staff management
+- **Payroll** - Salary calculations
+- **Balance** - Financial management
+- **Reports** - Business reports
+
+## CURRENT blueErpV3 STATUS
+
+### What's Working ✅
+- Laravel 11 + Filament 3.3 installed
+- Database: digantac_blueerp (92+ tables)
+- Authentication: /admin login working
+- Dashboard: /admin accessible after login
+- Docker containers running
+- 20+ Admin CRUD modules working
+
+### NEW: What's Just Added ✅ (All Complete!)
+- **Customers Module**: /admin/customers
+- **Products Module**: /admin/products
+- **Product Categories**: /admin/product-categories
+- **Colors**: /admin/colors
+- **Orders Module**: /admin/orders
+- **Stock Module**: /admin/stocks
+- **Stock Entry**: /admin/stock-entries
+- **Stock Transfer**: /admin/stock-transfers
+- **Outlets Module**: /admin/outlets
+- **Suppliers Module**: /admin/suppliers
+- **Employees Module**: /admin/employees
+- **Attendance**: /admin/attendances
+- **Leaves**: /admin/leaves
+- **Salary**: /admin/salary
+- **Balance Module**: /admin/balance
+- **Payments Module**: /admin/payments
+- **Expenses Module**: /admin/expenses
+- **Supplier Bills**: /admin/supplier-bills
+- **Shipments Module**: /admin/shipments
+- **POS (Point of Sale)**: /admin/pos
+- **Sales**: /admin/sells
+
+### Completed ✅
+- All Models created for core database tables
+- All Filament Resources (CRUD pages) created
+- Ready for use
+
+### What's Remaining
+- Reports - Future enhancement
+- API Endpoints - Mobile app integration
+- Vue.js Frontend - Custom POS/dashboard (not needed - using Filament)
+
+## COMPLETED! ✅
+
+---
+
+# CURRENT TASK: POS Implementation (In Progress)
+
+## Goal
+Implement POS (Point of Sale) at /admin/pos - enter barcode → search product_archive → add to cart → confirm sale
+
+## What's Done ✅
+1. PosNew page created at /admin/pos/create (extends Filament\Pages\Page)
+2. Barcode search uses product_archive table (products table has no barcode column)
+3. completeSale() method - saves to 'sell' table, updates product_archive sell_statement
+4. Customer lookup/create functionality added
+
+## Testing Needed 🔄
+- Test barcode scanning and adding to cart
+- Test customer lookup by mobile
+- Test complete sale and database save
+- Test receipt generation
+
+## Technical Notes
+- product_archive table columns: id, product_id, fy, ptype, barcode, code, name, price, purchase, outlet_id, outlet_name, audit_outlet_id, audit_outlet_name, audit_at, audit_status, supplier_id, supplier_name, entry_statement, transfer, transfer_statement, sell, sell_statement, return, status, prod_emp, prod_cat, entry_at, entry_by, update_at, update_by
+- Sample barcode: VHF-003-38-11
+- Old blueErp pos.js calls: api/v1/management/sell/entry (but endpoint doesn't exist in old project either!)
+
+---
+
+# TASK: Dashboard Implementation
+
+## Source: Old blueErp Dashboard
+- **URL**: http://localhost:7000/dashboard
+- **View**: `resources/views/dashboard/common.blade.php`
+- **Controller**: `app/Http/Controllers/DashboardController.php`
+- **JS**: `public/blueerp/apps/dashboard.js` (Vue.js 2)
+
+## Dashboard Features (Old blueErp)
+
+### Top Cards (Small Boxes)
+1. **Attendance Punch** - Check In/Check Out button (if payroll='yes')
+2. **Pending Transfer** - shows pending_products (if group_id > 2)
+3. **Cash Balance** - from balance table
+4. **City Bank Balance** - from balance table
+5. **DBBL Balance** - from balance table
+6. **Islami Bank Balance** - from balance table
+7. **Bank Asia Balance** - from balance table
+
+### Info Boxes (Stats)
+1. **Total Available Products** - available_products count
+2. **Total Available Barcodes** - current_stock count (links to auditdetails)
+3. **Number of Today Sell** - todays_sell count
+4. **Number of Today Returns** - todayreturn count
+
+### POS Stats
+1. **Today POS Sell** - todays_sell_amount
+2. **Today POS Returns** - todays_return_amount
+3. **Today Net POS Sell** - todays_sell_amount - todays_return_amount
+4. **Sold Items** - todays_sell_qtt
+5. **Return Items** - todays_return_qtt
+6. **Net Sell Items** - todays_sell_qtt - todays_return_qtt
+
+### Quick Action Buttons (Links)
+- Download Customer (group_id < 3)
+- Daraz Monthly
+- Go To POS
+- Go To Stock Report
+- Go To Old Stock Entry
+- Go To Outlet Wise Balance
+
+### Utility Section (group_id < 3)
+- Barcode input field
+- Assign Outlet dropdown (outlet_wise_sell)
+- Make Sellable button
+- Damaged button
+
+### Tables (group_id > 2)
+- **Today Sell Summary**: Invoice, QTT, Bill, Disc, Net, Paid, Due
+- **Today Return Summary**: Receipt No., QTT, Amount
+
+### Date Range Report (group_id <= 2)
+- Date picker (from/to)
+- Distribution Stats:
+  - Total Production
+  - Warehouse
+  - Transfer Channel
+  - Outlet Stock
+  - POS Sell
+  - Order Sell
+  - Damaged
+  - Stock Error
+- Outlet Wise Sell Table (POS, Order, Return, Cancel, Net Sell, Expenses)
+
+### Charts (group_id < 3)
+- Net Sell of Last 30 Days (Highcharts)
+  - POS Sell (Net)
+  - Order Sell
+  - Net Sell
+
+## APIs Used by Dashboard
+- `GET /api/v1/cdn/common/dashboard` - Main dashboard data
+- `GET /api/v1/cdn/common/dashboard-range/{from}/{to}` - Range data
+- `GET /api/v1/payroll/punch` - Punch attendance
+- `GET /api/v1/payroll/lastpunch` - Last punch status
+- `POST /api/v1/utility/barcode/makedamage` - Mark barcode damaged
+- `POST /api/v1/utility/barcode/makesellable` - Make barcode sellable
+
+## New blueErpV3 Dashboard (Filament)
+- **URL**: http://localhost:8900/admin
+- **Uses**: Filament's built-in Dashboard (Pages\Dashboard)
+- **Currently**: Default widgets only (AccountWidget, FilamentInfoWidget)
+- **Need to**: Create custom Filament widgets for all dashboard features
+
+## Implementation Approach
+1. Create Filament Widgets for each stat/card
+2. Create API endpoints in blueErpV3 (or use existing ones)
+3. Replace default Dashboard with custom widgets
+
+## IMPLEMENTED: Dashboard ✅ (April 2026)
+
+### Created Widgets:
+1. **BalanceStatsWidget** - Shows balance stats by balance_method
+   - Cash Balance, City Bank, DBBL, Islami Bank, Bank Asia
+
+2. **SalesStatsWidget** - Shows POS sales statistics
+   - Today's POS Sell, Returns, Net POS Sell
+
+3. **ProductsStatsWidget** - Shows product/barcode counts
+   - Available Products, Available Barcodes
+
+### Key Files Created:
+- /app/Filament/Widgets/BalanceStatsWidget.php
+- /app/Filament/Widgets/SalesStatsWidget.php
+- /app/Filament/Widgets/ProductsStatsWidget.php
+
+### Modified:
+- /app/Providers/Filament/AdminPanelProvider.php - Added widgets to dashboard

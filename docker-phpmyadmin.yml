@@ -1,0 +1,20 @@
+services:
+  phpmyadmin:
+    image: phpmyadmin:latest
+    container_name: blueerp-phpmyadmin
+    restart: always
+    environment:
+      PMA_HOST: blueerp-v2-mysql
+      PMA_PORT: 3306
+      PMA_USER: root
+      PMA_PASSWORD: root_secret
+      UPLOAD_SIZE: 2G
+      MEMORY_LIMIT: 1G
+    ports:
+      - "8084:80"
+    networks:
+      - blueerp-net
+
+networks:
+  blueerp-net:
+    external: true

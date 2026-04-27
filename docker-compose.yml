@@ -1,0 +1,67 @@
+services:
+  php:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "${APPLICATION_PORT:-8900}:80"
+    volumes:
+      - ./:/var/www/html/
+      - ./docker/default.conf:/etc/apache2/sites-enabled/000-default.conf
+    environment:
+      - APACHE_RUN_USER=www-data
+      - APACHE_RUN_GROUP=www-data
+    depends_on:
+      - db
+    networks:
+      - blueerpv3
+    entrypoint: >
+      /bin/sh -c "
+        rm -rf /var/www/html/storage/logs /var/www/html/storage/framework/sessions /var/www/html/storage/framework/cache /var/www/html/bootstrap/cache 2>/dev/null || true &&
+        mkdir -p /var/www/html/storage/logs /var/www/html/storage/framework/sessions /var/www/html/storage/framework/cache /var/www/html/bootstrap/cache 2>/dev/null || true &&
+        chmod -R 777 /var/www/html/storage /var/www/html/bootstrap/cache 2>/dev/null || true &&
+        apache2-foreground
+      "
+
+  db:
+    image: mysql:8.0
+    restart: always
+    user: mysql
+    command: >
+      --max_allowed_packet=64M
+      --default-authentication-plugin=mysql_native_password
+      --general-log=1
+      --general-log-file=/var/lib/mysql/general.log
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:-plzletme!n123}
+      MYSQL_DATABASE: ${DB_DATABASE:-blueerp_v3}
+      MYSQL_USER: appuser
+      MYSQL_PASSWORD: apppassword
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ./docker/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - blueerpv3
+      
+  phpmyadmin:
+    image: phpmyadmin
+    restart: always
+    user: www-data
+    ports:
+      - "${PHPMYADMIN_PORT:-8920}:80"
+    environment:
+      PMA_HOST: db
+      PMA_ARBITRARY: 1
+      UPLOAD_LIMIT: 1024M
+      MAX_EXECUTION_TIME: 600
+      MEMORY_LIMIT: 512M
+    depends_on:
+      - db
+    networks:
+      - blueerpv3
+
+volumes:
+  mysql-data:
+
+networks:
+  blueerpv3:

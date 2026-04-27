@@ -188,7 +188,7 @@ class PosNew extends Page
 
         $this->isProcessing = true;
         $invoiceNo = 'INV-' . time();
-        
+
         try {
             $screenData = [
             'customer' => [
@@ -246,14 +246,14 @@ class PosNew extends Page
 
             $saved = \App\Models\Sell::where('invoice_no', $invoiceNo)->first();
 
-            \Log::info('POS Sell record created, checking DB...');
+            //\Log::info('POS Sell record created, checking DB...');
 
             if (!$saved) {
-                \Log::error('POS: Sale saved but not found - invoice: ' . $invoiceNo);
+                //\Log::error('POS: Sale saved but not found - invoice: ' . $invoiceNo);
                 throw new \Exception('Failed to save sale record');
             }
 
-            \Log::info('POS Sale saved: ' . $invoiceNo . ' ID: ' . $saved->id);
+            //\Log::info('POS Sale saved: ' . $invoiceNo . ' ID: ' . $saved->id);
 
             $this->last_sale_id = $saved->id;
             $this->last_invoice_no = $invoiceNo;
